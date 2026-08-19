@@ -52,7 +52,7 @@ public final class LimelightSimulation extends SubsystemBase {
       camera.publishIfReady(nowSeconds);
     }
 
-    if (nowSeconds - lastCaptureSeconds < ConfigVision.UPDATE_PERIOD_SECONDS) {
+    if (nowSeconds - lastCaptureSeconds < ConfigVision.OBSERVATION_PERIOD_SECONDS) {
       return;
     }
     lastCaptureSeconds = nowSeconds;
