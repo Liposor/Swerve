@@ -18,14 +18,14 @@ public final class ConfigVision {
 
 
   public static final CameraConfig FRONT_CAMERA =
-      camera("limelight-front", 0.354, 0.00, 0.405, 0.0, 25, 0.0);
+      camera("limelight-front", 0.348, 0.00, 0.405, 0.0, 23, 0.0);
 
 
   public static final List<CameraConfig> CAMERAS =
       List.of(FRONT_CAMERA);
 
-  /** Processamento no robo; as Limelights fazem o trabalho pesado de imagem. */
-  public static final double UPDATE_PERIOD_SECONDS = 1.0 / 30.0;
+  /** Consumo das observacoes; robot_orientation_set e publicado separadamente a 50 Hz. */
+  public static final double OBSERVATION_PERIOD_SECONDS = 1.0 / 30.0;
   public static final double TELEMETRY_PERIOD_SECONDS = 0.10;
 
   /** Limites de qualidade e plausibilidade da fusao MegaTag2 normal. */
@@ -69,6 +69,13 @@ public final class ConfigVision {
   public static final double HEADING_RESET_MAX_MT1_MT2_TRANSLATION_DIFFERENCE_METERS = 0.35;
   public static final double HEADING_RESET_MAX_MT1_MT2_TIMESTAMP_DIFFERENCE_SECONDS = 0.10;
   public static final double HEADING_RESET_MAX_CAMERA_DISAGREEMENT_DEGREES = 8.0;
+
+  /**
+   * Depois de corrigir o heading com MT1, ignora os MT2 ainda calculados com o yaw antigo. Em
+   * seguida, abre uma janela curta para o MT2 inicializar X/Y mesmo longe da odometria atual.
+   */
+  public static final double MT2_SETTLE_AFTER_HEADING_RESET_SECONDS = 0.12;
+  public static final double MT2_LARGE_CORRECTION_WINDOW_AFTER_HEADING_RESET_SECONDS = 1.0;
 
   /** Modelo visual simples usado apenas no simulador. */
   public static final double SIM_HORIZONTAL_FOV_DEGREES = 63.3;

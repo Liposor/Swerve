@@ -40,8 +40,12 @@ public final class VisionSubsystem extends SubsystemBase {
   private final StatusSignal<AngularVelocity> yawRate;
   private final StatusSignal<AngularVelocity> pitchRate;
   private final StatusSignal<AngularVelocity> rollRate;
-  private double lastUpdateSeconds = Double.NEGATIVE_INFINITY;
+  private double lastObservationUpdateSeconds = Double.NEGATIVE_INFINITY;
   private double lastTelemetrySeconds = Double.NEGATIVE_INFINITY;
+  private double mt2FusionResumeSeconds = Double.NEGATIVE_INFINITY;
+  private double mt2LargeCorrectionUntilSeconds = Double.NEGATIVE_INFINITY;
+  private double lastFieldYawDegrees = Double.NaN;
+  private double lastYawRateDegreesPerSecond = Double.NaN;
   private boolean pigeonHealthy;
   private String pigeonStatusName = "StatusCodeNotInitialized";
   private Result lastHeadingResetResult =
@@ -58,9 +62,12 @@ public final class VisionSubsystem extends SubsystemBase {
     var pigeon = drivetrain.getPigeon2();
     pitch = pigeon.getPitch();
     roll = pigeon.getRoll();
-    yawRate = pigeon.getAngularVelocityZDevice();
-    pitchRate = pigeon.getAngularVelocityYDevice();
-    rollRate = pigeon.getAngularVelocityXDevice();
+    // O Pigeon deste robo esta montado com roll de 180 graus. As taxas "Device" ficam no
+    // referencial fisico invertido; as taxas "World" respeitam a MountPose e usam o mesmo sinal
+    // anti-horario positivo do yaw WPILib enviado ao MegaTag2.
+    yawRate = pigeon.getAngularVelocityZWorld();
+    pitchRate = pigeon.getAngularVelocityYWorld();
+    rollRate = pigeon.getAngularVelocityXWorld();
     BaseStatusSignal.setUpdateFrequencyForAll(
         50.0, pitch, roll, yawRate, pitchRate, rollRate);
   }
@@ -78,11 +85,6 @@ public final class VisionSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     double nowSeconds = Timer.getFPGATimestamp();
-    if (nowSeconds - lastUpdateSeconds < ConfigVision.UPDATE_PERIOD_SECONDS) {
-      return;
-    }
-    lastUpdateSeconds = nowSeconds;
-
     // refreshAll e nao bloqueante; o retorno impede o uso de valores antigos do Pigeon.
     var pigeonStatus =
         BaseStatusSignal.refreshAll(false, pitch, roll, yawRate, pitchRate, rollRate);
@@ -99,7 +101,11 @@ public final class VisionSubsystem extends SubsystemBase {
     double pitchRateDegreesPerSecond = pitchRate.getValue().in(DegreesPerSecond);
     double rollRateDegreesPerSecond = rollRate.getValue().in(DegreesPerSecond);
     double fieldYawDegrees = drivetrain.getState().Pose.getRotation().getDegrees();
+    lastFieldYawDegrees = fieldYawDegrees;
+    lastYawRateDegreesPerSecond = yawRateDegreesPerSecond;
 
+    // A orientacao precisa chegar a cada frame da Limelight. Por isso ela e publicada em todo
+    // ciclo do scheduler (50 Hz), independentemente da taxa usada para consumir observacoes.
     for (CameraState camera : cameras) {
       camera.io.updateRobotOrientation(
           fieldYawDegrees,
@@ -108,12 +114,33 @@ public final class VisionSubsystem extends SubsystemBase {
           pitchRateDegreesPerSecond,
           rollDegrees,
           rollRateDegreesPerSecond);
-      camera.io
-          .readLatestObservation()
-          .ifPresent(
-              mt2Observation ->
+    }
+
+    if (nowSeconds - lastObservationUpdateSeconds
+        >= ConfigVision.OBSERVATION_PERIOD_SECONDS) {
+      lastObservationUpdateSeconds = nowSeconds;
+      boolean fusionSettling = nowSeconds < mt2FusionResumeSeconds;
+      boolean allowLargeCorrection =
+          !fusionSettling && nowSeconds <= mt2LargeCorrectionUntilSeconds;
+
+      for (CameraState camera : cameras) {
+        camera.io
+            .readLatestObservation()
+            .ifPresent(
+                mt2Observation -> {
+                  camera.lastObservation = mt2Observation;
+                  if (fusionSettling) {
+                    camera.framesSkippedWhileHeadingSettles++;
+                    return;
+                  }
                   processObservation(
-                      camera, mt2Observation, nowSeconds, yawRateDegreesPerSecond));
+                      camera,
+                      mt2Observation,
+                      nowSeconds,
+                      yawRateDegreesPerSecond,
+                      allowLargeCorrection);
+                });
+      }
     }
 
     publishTelemetryIfDue(nowSeconds);
@@ -163,6 +190,15 @@ public final class VisionSubsystem extends SubsystemBase {
     drivetrain.resetRotation(result.heading());
     successfulHeadingResets++;
 
+    // Descarta por alguns frames qualquer MT2 calculado com o yaw anterior. Depois do reset,
+    // permite temporariamente uma correcao grande de X/Y para inicializar a pose no campo. Essa
+    // correcao continua vindo exclusivamente do MT2; MT1 foi usado apenas para o heading acima.
+    mt2FusionResumeSeconds =
+        nowSeconds + ConfigVision.MT2_SETTLE_AFTER_HEADING_RESET_SECONDS;
+    mt2LargeCorrectionUntilSeconds =
+        mt2FusionResumeSeconds
+            + ConfigVision.MT2_LARGE_CORRECTION_WINDOW_AFTER_HEADING_RESET_SECONDS;
+
     double correctionDegrees =
         Math.toDegrees(
             MathUtil.angleModulus(
@@ -201,14 +237,15 @@ public final class VisionSubsystem extends SubsystemBase {
       return;
     }
     lastTelemetrySeconds = nowSeconds;
-    publishTelemetry();
+    publishTelemetry(nowSeconds);
   }
 
   private void processObservation(
       CameraState camera,
       VisionObservation mt2Observation,
       double nowSeconds,
-      double yawRateDegreesPerSecond) {
+      double yawRateDegreesPerSecond,
+      boolean allowLargeCorrection) {
     // readLatestObservation() e o caminho de localizacao continua do MegaTag2.
     // MT1 permanece restrito aos metodos de reset, como readHeadingResetSample().
     VisionReliability.Result result =
@@ -217,10 +254,9 @@ public final class VisionSubsystem extends SubsystemBase {
             drivetrain.getState().Pose,
             nowSeconds,
             yawRateDegreesPerSecond,
-            DriverStation.isDisabled(),
+            allowLargeCorrection,
             ConfigVision.FIELD_LAYOUT);
 
-    camera.lastObservation = mt2Observation;
     camera.lastResult = result;
     if (!result.accepted()) {
       camera.rejectedFrames++;
@@ -244,9 +280,18 @@ public final class VisionSubsystem extends SubsystemBase {
     camera.acceptedFrames++;
   }
 
-  private void publishTelemetry() {
+  private void publishTelemetry(double nowSeconds) {
     SmartDashboard.putBoolean("Vision/PigeonHealthy", pigeonHealthy);
     SmartDashboard.putString("Vision/PigeonStatus", pigeonStatusName);
+    SmartDashboard.putNumber("Vision/MT2/FieldYawDeg", lastFieldYawDegrees);
+    SmartDashboard.putNumber(
+        "Vision/MT2/YawRateDegPerSec", lastYawRateDegreesPerSecond);
+    SmartDashboard.putBoolean(
+        "Vision/MT2/HeadingSettling", nowSeconds < mt2FusionResumeSeconds);
+    SmartDashboard.putBoolean(
+        "Vision/MT2/LargeCorrectionArmed",
+        nowSeconds >= mt2FusionResumeSeconds
+            && nowSeconds <= mt2LargeCorrectionUntilSeconds);
     SmartDashboard.putNumber(
         "Vision/HeadingReset/SuccessfulCount", successfulHeadingResets);
     SmartDashboard.putNumber(
@@ -263,6 +308,9 @@ public final class VisionSubsystem extends SubsystemBase {
       SmartDashboard.putNumber(prefix + "Confidence", camera.lastResult.confidence());
       SmartDashboard.putNumber(prefix + "AcceptedFrames", camera.acceptedFrames);
       SmartDashboard.putNumber(prefix + "RejectedFrames", camera.rejectedFrames);
+      SmartDashboard.putNumber(
+          prefix + "FramesSkippedWhileHeadingSettles",
+          camera.framesSkippedWhileHeadingSettles);
       if (camera.lastObservation != null) {
         SmartDashboard.putString(
             prefix + "VisibleTagIds", camera.lastObservation.tagIdsText());
@@ -285,6 +333,7 @@ public final class VisionSubsystem extends SubsystemBase {
             VisionReliability.RejectionReason.NO_TAGS);
     int acceptedFrames;
     int rejectedFrames;
+    int framesSkippedWhileHeadingSettles;
 
     CameraState(LimelightCameraIO io) {
       this.io = io;
