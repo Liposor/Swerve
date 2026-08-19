@@ -101,7 +101,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
           .ifPresent(
               alliance -> {
                 setOperatorPerspectiveForward(
-                    alliance == Alliance.Red ? BLUE_PERSPECTIVE : RED_PERSPECTIVE);
+                    alliance == Alliance.Red ? RED_PERSPECTIVE : BLUE_PERSPECTIVE);
                 hasAppliedOperatorPerspective = true;
               });
     }

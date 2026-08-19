@@ -11,6 +11,7 @@ import com.ctre.phoenix6.StatusSignal;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -24,8 +25,14 @@ import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.vision.VisionHeadingResetter.RejectionReason;
 import frc.robot.vision.VisionHeadingResetter.Result;
 
-/** Envia orientacao ao MegaTag2, filtra frames e oferece reset seguro do heading. */
+/**
+ * Envia orientacao ao MegaTag2, atualiza somente X/Y da pose com MT2 e oferece
+ * reset seguro do heading, que tambem pode usar MT1.
+ */
 public final class VisionSubsystem extends SubsystemBase {
+  // Valor propositalmente enorme: impede a visao de corrigir o heading durante a fusao normal.
+  private static final double TRANSLATION_ONLY_THETA_STD_DEV_RADIANS = 9_999_999.0;
+
   private final CommandSwerveDrivetrain drivetrain;
   private final List<CameraState> cameras = new ArrayList<>();
   private final StatusSignal<Angle> pitch;
@@ -104,9 +111,9 @@ public final class VisionSubsystem extends SubsystemBase {
       camera.io
           .readLatestObservation()
           .ifPresent(
-              observation ->
+              mt2Observation ->
                   processObservation(
-                      camera, observation, nowSeconds, yawRateDegreesPerSecond));
+                      camera, mt2Observation, nowSeconds, yawRateDegreesPerSecond));
     }
 
     publishTelemetryIfDue(nowSeconds);
@@ -199,32 +206,41 @@ public final class VisionSubsystem extends SubsystemBase {
 
   private void processObservation(
       CameraState camera,
-      VisionObservation observation,
+      VisionObservation mt2Observation,
       double nowSeconds,
       double yawRateDegreesPerSecond) {
+    // readLatestObservation() e o caminho de localizacao continua do MegaTag2.
+    // MT1 permanece restrito aos metodos de reset, como readHeadingResetSample().
     VisionReliability.Result result =
         VisionReliability.evaluate(
-            observation,
+            mt2Observation,
             drivetrain.getState().Pose,
             nowSeconds,
             yawRateDegreesPerSecond,
             DriverStation.isDisabled(),
             ConfigVision.FIELD_LAYOUT);
 
-    camera.lastObservation = observation;
+    camera.lastObservation = mt2Observation;
     camera.lastResult = result;
     if (!result.accepted()) {
       camera.rejectedFrames++;
       return;
     }
 
+    // Mantem a rotacao atual do Pigeon/odometria e aproveita somente X e Y do MT2.
+    Pose2d translationOnlyPose =
+        new Pose2d(
+            mt2Observation.robotPose().getX(),
+            mt2Observation.robotPose().getY(),
+            drivetrain.getState().Pose.getRotation());
+
     drivetrain.addVisionMeasurement(
-        observation.robotPose().toPose2d(),
-        observation.timestampSeconds(),
+        translationOnlyPose,
+        mt2Observation.timestampSeconds(),
         VecBuilder.fill(
             result.xyStdDevMeters(),
             result.xyStdDevMeters(),
-            result.thetaStdDevRadians()));
+            TRANSLATION_ONLY_THETA_STD_DEV_RADIANS));
     camera.acceptedFrames++;
   }
 

@@ -16,20 +16,13 @@ public final class ConfigVision {
   public static final AprilTagFieldLayout FIELD_LAYOUT =
       AprilTagFieldLayout.loadField(AprilTagFields.k2026RebuiltWelded);
 
-  /*
-   * IMPORTANTE: estas poses sao valores iniciais para simulacao.
-   * Meca cada camera a partir do centro do robo e ajuste antes do uso real.
-   * WPILib: +X frente, +Y esquerda, +Z cima; yaw positivo anti-horario.
-   */
+
   public static final CameraConfig FRONT_CAMERA =
-      camera("limelight-front", 0.30, 0.00, 0.55, 0.0, -15.0, 0.0);
-  public static final CameraConfig LEFT_CAMERA =
-      camera("limelight-left", 0.05, 0.27, 0.52, 0.0, -12.0, 35.0);
-  public static final CameraConfig RIGHT_CAMERA =
-      camera("limelight-right", 0.05, -0.27, 0.52, 0.0, -12.0, -35.0);
+      camera("limelight-front", 0.354, 0.00, 0.405, 0.0, 25, 0.0);
+
 
   public static final List<CameraConfig> CAMERAS =
-      List.of(FRONT_CAMERA, LEFT_CAMERA, RIGHT_CAMERA);
+      List.of(FRONT_CAMERA);
 
   /** Processamento no robo; as Limelights fazem o trabalho pesado de imagem. */
   public static final double UPDATE_PERIOD_SECONDS = 1.0 / 30.0;
@@ -42,11 +35,11 @@ public final class ConfigVision {
   public static final double MAX_SINGLE_TAG_AMBIGUITY = 0.25;
   public static final double MAX_MEASUREMENT_AGE_SECONDS = 0.50;
   public static final double MAX_FUTURE_TIMESTAMP_SECONDS = 0.05;
-  public static final double MAX_ROBOT_POSE_Z_METERS = 0.20;
+  public static final double MAX_ROBOT_POSE_Z_METERS = 0.45;
   public static final double MAX_ROBOT_ROLL_PITCH_DEGREES = 12.0;
-  public static final double MAX_GYRO_RATE_DEGREES_PER_SECOND = 360.0;
+  public static final double MAX_GYRO_RATE_DEGREES_PER_SECOND = 720.0;
   public static final double FIELD_BORDER_MARGIN_METERS = 0.50;
-  public static final double BASE_MAX_INNOVATION_METERS = 0.75;
+  public static final double BASE_MAX_INNOVATION_METERS = 0.6698;
   public static final double INNOVATION_PER_DISTANCE = 0.35;
 
   /** Modelo de incerteza: cresce aproximadamente com o quadrado da distancia. */
