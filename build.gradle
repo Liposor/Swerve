@@ -10,6 +10,17 @@ java {
 
 def ROBOT_MAIN_CLASS = "frc.robot.Main"
 
+// Codigo executavel do robo fica em src/. Integracoes e classes de apoio ficam em lib/.
+// Os dois diretorios pertencem ao mesmo source set para evitar um modulo Gradle artificial
+// e dependencias circulares com as classes geradas pelo Phoenix Tuner X.
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java', 'lib']
+        }
+    }
+}
+
 // Define my targets (RoboRIO) and artifacts (deployable files)
 // This is added by GradleRIO's backing project DeployUtils.
 deploy {
@@ -90,6 +101,7 @@ wpi.sim.addDriverstation()
 jar {
     from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     from('src') { into 'backup/src' }
+    from('lib') { into 'backup/lib' }
     from('vendordeps') { into 'backup/vendordeps' }
     from('build.gradle') { into 'backup' }
     manifest edu.wpi.first.gradlerio.GradleRIOPlugin.javaManifest(ROBOT_MAIN_CLASS)
