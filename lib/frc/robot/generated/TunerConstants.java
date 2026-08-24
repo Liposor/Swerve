@@ -35,7 +35,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.robot.config.ConfigSwerve;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
-/** Configuracao do swerve validada para o hardware e isolada da simulacao desktop. */
+/** Configuracao gerada do swerve, isolada do codigo de comportamento do robo. */
 public final class TunerConstants {
   private TunerConstants() {}
 
@@ -62,13 +62,13 @@ public final class TunerConstants {
    * proprio robo.
    */
   private static final Slot0Configs TORQUE_CURRENT_DRIVE_GAINS =
-    new Slot0Configs()
-        .withKP(10.0)
-        .withKI(0.0)
-        .withKD(0.0)
-        .withKS(3.30)
-        .withKV(0.055)
-        .withKA(0.56);
+      new Slot0Configs()
+          .withKP(10.0)
+          .withKI(0.0)
+          .withKD(0.0)
+          .withKS(3.30)
+          .withKV(0.055)
+          .withKA(0.56);
 
   /** Fallback para manter VelocityVoltage caso os motores de drive nao tenham Phoenix Pro. */
   private static final Slot0Configs VOLTAGE_DRIVE_GAINS =
@@ -131,7 +131,7 @@ public final class TunerConstants {
   private static final double STEER_GEAR_RATIO = 26.09090909090909;
 
   /** Raio efetivo caracterizado no carpete em 14/08/2026. */
-  private static final Distance WHEEL_RADIUS = Inches.of(2.02211);;
+  private static final Distance WHEEL_RADIUS = Inches.of(2.02211);
 
   private static final boolean INVERT_LEFT_SIDE = false;
   private static final boolean INVERT_RIGHT_SIDE = true;
@@ -149,36 +149,35 @@ public final class TunerConstants {
           .withPigeon2Id(PIGEON_ID)
           .withPigeon2Configs(PIGEON_CONFIGS);
 
-  private static final
-      SwerveModuleConstantsFactory<
-              TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
-          MODULE_FACTORY =
-              new SwerveModuleConstantsFactory<
-                      TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>()
-                  .withDriveMotorGearRatio(DRIVE_GEAR_RATIO)
-                  .withSteerMotorGearRatio(STEER_GEAR_RATIO)
-                  .withCouplingGearRatio(COUPLING_GEAR_RATIO)
-                  .withWheelRadius(WHEEL_RADIUS)
-                  .withSteerMotorGains(STEER_GAINS)
-                  .withDriveMotorGains(DRIVE_GAINS)
-                  .withSteerMotorClosedLoopOutput(
-                      SwerveModuleConstants.ClosedLoopOutputType.Voltage)
-                  .withDriveMotorClosedLoopOutput(
-                      USE_TORQUE_CURRENT_FOC
-                          ? SwerveModuleConstants.ClosedLoopOutputType.TorqueCurrentFOC
-                          : SwerveModuleConstants.ClosedLoopOutputType.Voltage)
-                  .withSlipCurrent(SLIP_CURRENT)
-                  .withSpeedAt12Volts(ConfigSwerve.SPEED_AT_12_VOLTS)
-                  .withDriveMotorType(DriveMotorArrangement.TalonFX_Integrated)
-                  .withSteerMotorType(SteerMotorArrangement.TalonFX_Integrated)
-                  .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
-                  .withDriveMotorInitialConfigs(DRIVE_INITIAL_CONFIGS)
-                  .withSteerMotorInitialConfigs(STEER_INITIAL_CONFIGS)
-                  .withEncoderInitialConfigs(ENCODER_INITIAL_CONFIGS)
-                  .withSteerInertia(STEER_INERTIA)
-                  .withDriveInertia(DRIVE_INERTIA)
-                  .withSteerFrictionVoltage(STEER_FRICTION_VOLTAGE)
-                  .withDriveFrictionVoltage(DRIVE_FRICTION_VOLTAGE);
+  private static final SwerveModuleConstantsFactory<
+          TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>
+      MODULE_FACTORY =
+          new SwerveModuleConstantsFactory<
+                  TalonFXConfiguration, TalonFXConfiguration, CANcoderConfiguration>()
+              .withDriveMotorGearRatio(DRIVE_GEAR_RATIO)
+              .withSteerMotorGearRatio(STEER_GEAR_RATIO)
+              .withCouplingGearRatio(COUPLING_GEAR_RATIO)
+              .withWheelRadius(WHEEL_RADIUS)
+              .withSteerMotorGains(STEER_GAINS)
+              .withDriveMotorGains(DRIVE_GAINS)
+              .withSteerMotorClosedLoopOutput(
+                  SwerveModuleConstants.ClosedLoopOutputType.Voltage)
+              .withDriveMotorClosedLoopOutput(
+                  USE_TORQUE_CURRENT_FOC
+                      ? SwerveModuleConstants.ClosedLoopOutputType.TorqueCurrentFOC
+                      : SwerveModuleConstants.ClosedLoopOutputType.Voltage)
+              .withSlipCurrent(SLIP_CURRENT)
+              .withSpeedAt12Volts(ConfigSwerve.SPEED_AT_12_VOLTS)
+              .withDriveMotorType(DriveMotorArrangement.TalonFX_Integrated)
+              .withSteerMotorType(SteerMotorArrangement.TalonFX_Integrated)
+              .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
+              .withDriveMotorInitialConfigs(DRIVE_INITIAL_CONFIGS)
+              .withSteerMotorInitialConfigs(STEER_INITIAL_CONFIGS)
+              .withEncoderInitialConfigs(ENCODER_INITIAL_CONFIGS)
+              .withSteerInertia(STEER_INERTIA)
+              .withDriveInertia(DRIVE_INERTIA)
+              .withSteerFrictionVoltage(STEER_FRICTION_VOLTAGE)
+              .withDriveFrictionVoltage(DRIVE_FRICTION_VOLTAGE);
 
   private static final Distance HALF_WHEELBASE = Inches.of(11.4173);
   private static final Distance HALF_TRACKWIDTH = Inches.of(10.1378);
@@ -248,16 +247,15 @@ public final class TunerConstants {
     public TunerSwerveDrivetrain(
         SwerveDrivetrainConstants drivetrainConstants,
         SwerveModuleConstants<?, ?, ?>... modules) {
-     super(
-        TalonFX::new,
-        TalonFX::new,
-        CANcoder::new,
-        drivetrainConstants,
-        ConfigSwerve.ODOMETRY_UPDATE_FREQUENCY_HZ,
-        modules);
+      super(
+          TalonFX::new,
+          TalonFX::new,
+          CANcoder::new,
+          drivetrainConstants,
+          ConfigSwerve.ODOMETRY_UPDATE_FREQUENCY_HZ,
+          modules);
 
-    getOdometryThread()
-        .setThreadPriority(ConfigSwerve.ODOMETRY_THREAD_PRIORITY);
+      getOdometryThread().setThreadPriority(ConfigSwerve.ODOMETRY_THREAD_PRIORITY);
     }
   }
 }

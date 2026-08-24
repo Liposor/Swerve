@@ -27,8 +27,22 @@ MegaTag2, histórico de odometria, estados da Superstructure e PathPlanner.
 - `config/ConfigSwerve.java`: velocidades, deadband, simulação e perfis da Superstructure.
 - `config/ConfigVision.java`: nomes, transforms, FOV e todos os gates das câmeras.
 - `config/ConfigLocalization.java`: colisão, histórico, X-lock, PathPlanner e desempenho.
-- `generated/TunerConstants.java`: hardware do swerve; deve ser regenerado no Phoenix Tuner X.
+- `lib/frc/robot/generated/TunerConstants.java`: hardware do swerve; deve ser regenerado no
+  Phoenix Tuner X.
 - `src/main/deploy/pathplanner/settings.json`: modelo físico usado pelo PathPlanner.
+
+## Organização do código
+
+- `src/main/java/frc/robot`: inicialização e comportamento específico do robô.
+- `src/main/java/frc/robot/config`: constantes ajustadas pela equipe.
+- `src/main/java/frc/robot/control`: controladores de movimento.
+- `src/main/java/frc/robot/localization`: diagnóstico, recuperação e calibração da odometria.
+- `src/main/java/frc/robot/subsystems`: subsistemas Command-Based.
+- `lib/frc/robot`: código gerado e componentes auxiliares de telemetria, visão e desempenho.
+
+O `build.gradle` compila `src/main/java` e `lib` no mesmo source set. Assim, o Phoenix Tuner X e as
+integrações continuam podendo usar os subsistemas do projeto sem criar dependências circulares ou
+encher a árvore principal com arquivos auxiliares.
 
 ## Limelights e MegaTag2
 

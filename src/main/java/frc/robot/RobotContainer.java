@@ -13,12 +13,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Security.SwerveHeadingZoneLock;
 import frc.robot.config.ConfigSwerve;
+import frc.robot.control.SwerveHeadingZoneLock;
 import frc.robot.generated.TunerConstants;
 import frc.robot.localization.OdometryHealthMonitor;
 import frc.robot.localization.SwerveGeometryCalibrationCommand;
@@ -27,11 +26,12 @@ import frc.robot.localization.SwerveStateSolver.DriveState;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.Goal;
+import frc.robot.telemetry.Telemetry;
 import frc.robot.util.PerformanceMonitor;
 import frc.robot.vision.LimelightSimulation;
 import frc.robot.vision.VisionSubsystem;
 
-public class RobotContainer {
+public final class RobotContainer {
   private final double maxSpeedMetersPerSecond =
       ConfigSwerve.TELEOP_MAX_SPEED.in(MetersPerSecond);
   private final double maxAngularRateRadiansPerSecond =
@@ -46,16 +46,16 @@ public class RobotContainer {
       new SwerveRequest.SwerveDriveBrake();
   private final SwerveRequest.Idle idle = new SwerveRequest.Idle();
 
-  public final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
-  public final Superstructure superstructure =
+  private final CommandSwerveDrivetrain drivetrain = TunerConstants.createDrivetrain();
+  private final Superstructure superstructure =
       new Superstructure(
           () -> drivetrain.getState().Pose,
           () -> drivetrain.getState().Speeds.omegaRadiansPerSecond);
-  public final OdometryHealthMonitor odometryHealth = new OdometryHealthMonitor(drivetrain);
-  public final LimelightSimulation limelightSimulation =
+  private final OdometryHealthMonitor odometryHealth = new OdometryHealthMonitor(drivetrain);
+  private final LimelightSimulation limelightSimulation =
       new LimelightSimulation(() -> drivetrain.getState().Pose);
-  public final VisionSubsystem vision = new VisionSubsystem(drivetrain);
-  public final PerformanceMonitor performanceMonitor = new PerformanceMonitor();
+  private final VisionSubsystem vision = new VisionSubsystem(drivetrain);
+  private final PerformanceMonitor performanceMonitor = new PerformanceMonitor();
 
   private final SwerveStateSolver swerveStateSolver = new SwerveStateSolver();
   private final SwerveHeadingZoneLock headingZoneLock =
@@ -218,13 +218,11 @@ public class RobotContainer {
         .and(driverController.rightBumper())
         .onTrue(superstructure.setGoalCommand(Goal.HOLDING_GAME_PIECE));
 
+    // Zero e uma volta completa representam o mesmo heading; ambos redefinem a trava para frente.
     driverController
         .povUp()
-        .onTrue(new InstantCommand(() -> headingZoneLock.gyro = Math.PI * 2.0));
-
-    driverController
-        .povDown()
-        .onTrue(new InstantCommand(() -> headingZoneLock.gyro = 0.0));
+        .or(driverController.povDown())
+        .onTrue(Commands.runOnce(headingZoneLock::resetTargetHeading));
 
     // POV direito inicia a medicao completa. POV esquerdo cancela sem alterar constantes.
     driverController.povRight().onTrue(geometryCalibration);
