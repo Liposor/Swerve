@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#11141c">
+  <title>Stardust Academy • WPILib 2027 Alpha 7</title>
+  <style>
+    :root{
+      --bg:#0c0e14;--surface:#151823;--surface2:#1c2030;--line:#2a3042;
+      --text:#f5f7ff;--muted:#a8afc3;--purple:#9b5cff;--purple2:#7137dc;
+      --green:#63e6a7;--green2:#27b97b;--yellow:#ffd166;--red:#ff647c;
+      --blue:#68b7ff;--shadow:0 14px 34px rgba(0,0,0,.3);--radius:22px
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:radial-gradient(circle at 50% -20%,#24183c 0,#0c0e14 42%);color:var(--text);font-family:Inter,ui-rounded,"Segoe UI",system-ui,sans-serif;min-height:100vh}
+    button,input,textarea{font:inherit}
+    button{cursor:pointer}
+    a{color:var(--green)}
+    .app{display:grid;grid-template-columns:238px minmax(0,720px) 292px;gap:32px;max-width:1320px;margin:auto;padding:24px}
+    .side{position:sticky;top:20px;height:calc(100vh - 40px)}
+    .brand{display:flex;align-items:center;gap:12px;padding:10px 12px 24px}
+    .brandmark{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,var(--purple),#5b2dad);box-shadow:0 7px 0 #482191;font-size:24px}
+    .brand b{font-size:18px;display:block}.brand small{color:var(--green);font-weight:800}
+    .nav{display:grid;gap:8px}
+    .nav button{border:2px solid transparent;background:transparent;color:var(--muted);border-radius:15px;text-align:left;padding:13px 14px;font-weight:800;display:flex;gap:12px;align-items:center}
+    .nav button:hover{background:var(--surface)}
+    .nav button.active{color:#d9c7ff;border-color:#54328b;background:#211a33}
+    .nav .ico{width:24px;text-align:center}
+    .version-card{position:absolute;bottom:8px;left:0;right:0;background:linear-gradient(145deg,#1d2030,#131620);border:1px solid var(--line);border-radius:18px;padding:15px}
+    .version-card strong{display:block;color:var(--yellow);font-size:13px;margin-bottom:5px}
+    .version-card p{font-size:12px;color:var(--muted);margin:0;line-height:1.45}
+    main{min-width:0}
+    .mobile-head{display:none}
+    .hero{overflow:hidden;position:relative;background:linear-gradient(135deg,#7639dc,#9d5cff 58%,#b873ff);padding:25px;border-radius:var(--radius);box-shadow:0 8px 0 #48218d;margin-bottom:30px}
+    .hero:after{content:"⚙";position:absolute;right:-8px;bottom:-46px;font-size:150px;color:rgba(255,255,255,.1);transform:rotate(17deg)}
+    .hero .tag{display:inline-flex;gap:7px;align-items:center;background:rgba(20,10,40,.25);padding:7px 10px;border-radius:99px;font-size:12px;font-weight:900}
+    .hero h1{font-size:31px;line-height:1.08;max-width:500px;margin:14px 0 10px}
+    .hero p{max-width:530px;color:#efe8ff;line-height:1.5;margin:0}
+    .hero-actions{display:flex;gap:10px;margin-top:20px}
+    .btn{border:0;border-radius:14px;padding:12px 16px;font-weight:900;color:#111}
+    .btn.primary{background:var(--green);box-shadow:0 5px 0 #279b6a}
+    .btn.primary:active{transform:translateY(3px);box-shadow:0 2px 0 #279b6a}
+    .btn.ghost{background:rgba(15,8,26,.25);border:1px solid rgba(255,255,255,.3);color:#fff}
+    .section-title{display:flex;align-items:flex-end;justify-content:space-between;margin:0 4px 18px}
+    .section-title h2{margin:0;font-size:21px}.section-title span{font-size:13px;color:var(--muted)}
+    .unit{margin-bottom:26px}
+    .unit-head{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:17px 19px;display:flex;gap:14px;align-items:center;margin-bottom:17px}
+    .unit-icon{width:47px;height:47px;display:grid;place-items:center;border-radius:14px;font-size:23px;background:#282038}
+    .unit-head h3{margin:0 0 4px;font-size:17px}.unit-head p{margin:0;color:var(--muted);font-size:13px}
+    .path{display:flex;flex-direction:column;align-items:center;gap:17px;position:relative;padding:4px 0 12px}
+    .path:before{content:"";position:absolute;top:10px;bottom:20px;width:5px;background:#252a39;border-radius:5px}
+    .lesson-node{position:relative;width:82px;height:73px;border:0;border-radius:24px;color:white;font-size:25px;font-weight:900;background:#393f50;box-shadow:0 7px 0 #242835;transition:.18s;z-index:1}
+    .lesson-node:nth-child(3n+1){transform:translateX(-90px)}
+    .lesson-node:nth-child(3n){transform:translateX(90px)}
+    .lesson-node.open{background:linear-gradient(145deg,var(--purple),#7840df);box-shadow:0 7px 0 #502696}
+    .lesson-node.done{background:linear-gradient(145deg,var(--green),#34c78b);box-shadow:0 7px 0 #188b5b;color:#0a3324}
+    .lesson-node.boss{border-radius:50%;width:91px;height:82px;background:linear-gradient(145deg,#ffca55,#f49735);box-shadow:0 7px 0 #ad5f1f;color:#512900}
+    .lesson-node.locked{opacity:.55;filter:saturate(.4)}
+    .lesson-node:not(.locked):hover{transform:translateY(-3px) scale(1.04)}
+    .lesson-node:nth-child(3n+1):not(.locked):hover{transform:translate(-90px,-3px) scale(1.04)}
+    .lesson-node:nth-child(3n):not(.locked):hover{transform:translate(90px,-3px) scale(1.04)}
+    .node-label{position:absolute;background:#080a0f;border:1px solid #303547;border-radius:10px;padding:7px 9px;font-size:11px;white-space:nowrap;left:50%;transform:translateX(-50%);top:85px;opacity:0;pointer-events:none;transition:.2s;color:#fff}
+    .lesson-node:hover .node-label{opacity:1}
+    .right{position:sticky;top:20px;height:max-content;display:grid;gap:14px}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .stat{border:1px solid var(--line);background:var(--surface);border-radius:14px;padding:11px 8px;text-align:center;font-size:13px;font-weight:900}
+    .stat small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+    .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+    .card h3{margin:0 0 13px;font-size:16px}
+    .progressbar{height:12px;background:#282d3d;border-radius:10px;overflow:hidden}
+    .progressbar i{display:block;height:100%;background:linear-gradient(90deg,var(--purple),var(--green));width:0;transition:.4s}
+    .progress-copy{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px}
+    .mission{background:linear-gradient(145deg,#182824,#141b20);border-color:#285443}
+    .mission .mini{color:var(--green);font-weight:900;font-size:12px}
+    .mission p{color:var(--muted);font-size:13px;line-height:1.45}
+    .outline-btn{width:100%;background:transparent;color:var(--text);border:2px solid var(--line);border-radius:12px;padding:10px;font-weight:900}
+    .outline-btn:hover{border-color:var(--purple)}
+    .screen{display:none}.screen.active{display:block}
+    .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px;margin-bottom:18px}
+    .panel h2,.panel h3{margin-top:0}.panel p,.panel li{color:#c0c5d5;line-height:1.6}
+    .change-grid,.lab-grid,.practice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .change,.lab{background:var(--surface2);border:1px solid var(--line);border-radius:17px;padding:16px}
+    .change b,.lab b{display:block;margin-bottom:7px}.old{color:var(--red)}.new{color:var(--green)}
+    code{font-family:"Cascadia Code",Consolas,monospace}
+    pre{white-space:pre-wrap;background:#0a0c12;border:1px solid #2c3242;border-radius:14px;padding:15px;color:#d9e2ff;overflow:auto;line-height:1.5}
+    .modal{display:none;position:fixed;inset:0;background:rgba(3,4,8,.8);backdrop-filter:blur(8px);z-index:50;padding:24px;overflow:auto}
+    .modal.show{display:grid;place-items:start center}
+    .lesson{width:min(760px,100%);background:#131722;border:1px solid #343a4d;border-radius:25px;box-shadow:var(--shadow);overflow:hidden;margin:auto}
+    .lesson-top{display:flex;gap:12px;align-items:center;padding:18px 20px;border-bottom:1px solid var(--line)}
+    .close{width:38px;height:38px;border:0;border-radius:11px;background:#242938;color:white;font-size:20px}
+    .lesson-progress{flex:1;height:12px;background:#282d3d;border-radius:12px;overflow:hidden}
+    .lesson-progress i{display:block;background:var(--green);height:100%;width:25%;transition:.3s}
+    .lesson-body{padding:26px}
+    .eyebrow{color:var(--green);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.12em}
+    .lesson-body h2{font-size:26px;margin:8px 0 12px}
+    .lesson-body p{color:#c7ccda;line-height:1.62}
+    .callout{border-left:4px solid var(--purple);background:#211c31;border-radius:0 13px 13px 0;padding:13px 15px;margin:18px 0;color:#ddd4f4}
+    .options{display:grid;gap:10px;margin:18px 0}
+    .option{padding:13px 14px;text-align:left;border:2px solid #343a4a;background:#1a1e2a;color:white;border-radius:14px}
+    .option:hover,.option.selected{border-color:var(--purple);background:#251d38}
+    textarea{width:100%;min-height:190px;background:#090b11;color:#dbe4ff;border:2px solid #303646;border-radius:14px;padding:14px;font-family:"Cascadia Code",monospace;resize:vertical;line-height:1.45}
+    .feedback{display:none;border-radius:14px;padding:13px 15px;margin-top:12px;font-weight:700}
+    .feedback.good{display:block;background:#15382b;color:#8df0bd}
+    .feedback.bad{display:block;background:#3a1921;color:#ff9aab}
+    .lesson-actions{display:flex;justify-content:flex-end;gap:10px;padding:18px 22px;border-top:1px solid var(--line)}
+    .lesson-actions .btn{min-width:130px}
+    .badge{display:inline-flex;padding:5px 8px;border-radius:8px;background:#28213b;color:#c9adff;font-size:11px;font-weight:900}
+    .alpha-warning{border:1px solid #5a4922;background:#2a2415;color:#ffe39a;border-radius:15px;padding:13px 15px;font-size:13px;line-height:1.5;margin-bottom:18px}
+    .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    .chip{border:1px solid var(--line);background:var(--surface);color:var(--muted);border-radius:99px;padding:8px 12px;font-weight:800}
+    .chip.active{background:#2c2043;color:#d9c5ff;border-color:#67459b}
+    @media(max-width:1050px){
+      .app{grid-template-columns:84px minmax(0,1fr) 260px}.brand div,.nav button span:last-child,.version-card{display:none}.brand{justify-content:center}.nav button{justify-content:center}.nav .ico{font-size:20px}
+    }
+    @media(max-width:800px){
+      .app{display:block;padding:14px}.side,.right{display:none}.mobile-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.mobile-head .brand{padding:0}.mobile-stats{font-weight:900}.hero h1{font-size:25px}.change-grid,.lab-grid,.practice-grid{grid-template-columns:1fr}.modal{padding:8px}.lesson-body{padding:20px}.lesson-node:nth-child(n){transform:none}.lesson-node:nth-child(n):not(.locked):hover{transform:translateY(-3px) scale(1.04)}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="brandmark">✦</div><div><b>Stardust Academy</b><small>WPILib 2027</small></div></div>
+    <nav class="nav">
+      <button class="active" data-screen="learn"><span class="ico">🧭</span><span>Aprender</span></button>
+      <button data-screen="practice"><span class="ico">⚡</span><span>Praticar</span></button>
+      <button data-screen="labs"><span class="ico">🧪</span><span>Laboratórios</span></button>
+      <button data-screen="changes"><span class="ico">↗</span><span>2026 → 2027</span></button>
+    </nav>
+    <div class="version-card"><strong>ALPHA 7 • CONTEÚDO FIXADO</strong><p>API ainda pode mudar. O curso marca tudo que deve ser revisto na próxima versão.</p></div>
+  </aside>
+
+  <main>
+    <div class="mobile-head"><div class="brand"><div class="brandmark">✦</div><div><b>Stardust Academy</b><small>Alpha 7</small></div></div><div class="mobile-stats">🔥 <span id="mStreak">1</span> · ⚡ <span id="mXp">0</span></div></div>
+
+    <section id="learn" class="screen active">
+      <div class="hero">
+        <span class="tag">🚀 TRILHA 2027 · JAVA · SIMULAÇÃO</span>
+        <h1>Construa o robô inteiro, uma missão por vez.</h1>
+        <p>Do primeiro projeto Alpha 7 ao swerve, Superstructure, shooter angulável, elevador, visão, climb e partida completa no AdvantageScope.</p>
+        <div class="hero-actions"><button class="btn primary" id="continueBtn">Continuar missão</button><button class="btn ghost" data-go="changes">Ver mudanças da Alpha 7</button></div>
+      </div>
+      <div class="alpha-warning"><b>⚠ Projeto experimental:</b> Alpha 7 exige Systemcore Image 14, Driver Station Alpha 7 e vendordeps compatíveis. Projetos 2026 devem ser importados; copiar a pasta inteira não é uma migração segura.</div>
+      <div class="section-title"><h2>Seu caminho de aprendizagem</h2><span id="lessonCount">0 missões</span></div>
+      <div id="course"></div>
+    </section>
+
+    <section id="practice" class="screen">
+      <div class="panel"><span class="eyebrow">Treino inteligente</span><h2>Reforce o que quebraria numa competição</h2><p>Os exercícios abaixo usam os erros reais de 2026 como revisão espaçada. Concluir um treino rende 15 XP.</p></div>
+      <div class="practice-grid" id="practiceGrid"></div>
+    </section>
+
+    <section id="labs" class="screen">
+      <div class="panel"><span class="eyebrow">Simulação determinística primeiro</span><h2>Laboratórios do robô 2027</h2><p>Não é uma simulação física avançada. Cada laboratório comprova uma propriedade do software e produz sinais legíveis no AdvantageScope.</p></div>
+      <div class="lab-grid" id="labGrid"></div>
+    </section>
+
+    <section id="changes" class="screen">
+      <div class="panel"><span class="eyebrow">WPILib 2027.0.0 Alpha 7</span><h2>O que realmente mudou desde 2026</h2><p>Esta tela funciona como checklist de migração. Ela foi montada com base no release oficial da Alpha 7 e nos documentos oficiais de Telemetry e Tunables.</p></div>
+      <div class="change-grid" id="changeGrid"></div>
+      <div class="panel">
+        <h3>Fontes oficiais</h3>
+        <p><a href="https://github.com/wpilibsuite/allwpilib/releases/tag/v2027.0.0-alpha-7" target="_blank">Release Alpha 7</a> · <a href="https://github.com/wpilibsuite/allwpilib/blob/main/telemetry/doc/telemetry.md" target="_blank">Telemetry API</a> · <a href="https://github.com/wpilibsuite/allwpilib/blob/main/tunables/doc/tunables.md" target="_blank">Tunables API</a> · <a href="https://github.com/wpilibsuite/allwpilib/blob/main/design-docs/commands-v3.md" target="_blank">Commands v3</a> · <a href="https://github.com/wpilibsuite/SystemcoreTesting" target="_blank">Systemcore Testing</a></p>
+      </div>
+    </section>
+  </main>
+
+  <aside class="right">
+    <div class="stats">
+      <div class="stat">🔥 <span id="streak">1</span><small>sequência</small></div>
+      <div class="stat">💚 <span id="hearts">5</span><small>vidas</small></div>
+      <div class="stat">⚡ <span id="xp">0</span><small>XP</small></div>
+    </div>
+    <div class="card">
+      <h3>Progresso geral</h3>
+      <div class="progressbar"><i id="overallBar"></i></div>
+      <div class="progress-copy"><span id="overallText">0 concluídas</span><span id="overallPct">0%</span></div>
+    </div>
+    <div class="card mission">
+      <span class="mini">MISSÃO DE HOJE</span>
+      <h3 id="dailyTitle">Complete uma lição</h3>
+      <p id="dailyCopy">Ganhe 20 XP e mantenha sua sequência ativa.</p>
+      <button class="outline-btn" id="dailyBtn">Começar</button>
+    </div>
+    <div class="card">
+      <h3>Critérios de competição</h3>
+      <p style="color:var(--muted);font-size:13px;line-height:1.5">Loop p95 &lt; 15 ms<br>Sem dependência estática<br>Pose com autoridade única<br>Dashboard ≠ logger<br>Transições registradas</p>
+    </div>
+    <button class="outline-btn" id="resetBtn">Reiniciar progresso</button>
+  </aside>
+</div>
+
+<div class="modal" id="lessonModal" aria-hidden="true">
+  <article class="lesson">
+    <div class="lesson-top"><button class="close" id="closeLesson">×</button><div class="lesson-progress"><i id="stepBar"></i></div><span id="heartTop">💚 5</span></div>
+    <div class="lesson-body" id="lessonBody"></div>
+    <div class="lesson-actions"><button class="btn ghost" id="prevStep">Voltar</button><button class="btn primary" id="nextStep">Verificar</button></div>
+  </article>
+</div>
+
+<script>
+(function(){
+  var units=[
+    {icon:"🧱",title:"Unidade 0 · Fundação Alpha 7",desc:"Instalação, projeto, OpModes e primeiro mecanismo",lessons:[
+      lesson("a7","Checkpoint Alpha 7","Entenda o ambiente mínimo compatível.","📦","concept","20"),
+      lesson("main","Main e OpModeRobot","Corrija a factory loader e organize os modos.","▶","code","25"),
+      lesson("mech","Primeiro Mechanism","Use a interface do Commands v3 sem acoplamento.","⚙","quiz","25"),
+      lesson("boss0","Chefão: projeto vivo","Inicie, simule e registre build info.","🏆","boss","50")
+    ]},
+    {icon:"📊",title:"Unidade 1 · Telemetry sem travar",desc:"A correção direta do maior erro de Houston",lessons:[
+      lesson("telemetry","Adeus SmartDashboard","Migre para TelemetryTable hierárquica.","📈","code","30"),
+      lesson("rates","Orçamento de frequências","Controle o que roda a 50, 20, 10 e 2 Hz.","⏱","quiz","25"),
+      lesson("snapshots","Snapshots atômicos","Não misture dados de instantes diferentes.","📸","concept","25"),
+      lesson("boss1","Chefão: loop saudável","Prove p95 abaixo de 15 ms.","🏆","boss","60")
+    ]},
+    {icon:"🎮",title:"Unidade 2 · Controles e Commands v3",desc:"Gamepads, deadband, comandos e prioridades",lessons:[
+      lesson("gamepad","Novo Gamepad","faceUp/Down/Left/Right e deadband padrão.","🎮","quiz","20"),
+      lesson("requirements","Requirements claros","Evite comandos brigando pelo mecanismo.","🔗","concept","25"),
+      lesson("heading","Heading Hold","Transforme o controle em máquina de estados.","🧭","code","35"),
+      lesson("boss2","Chefão: motorista no controle","Gire e solte sem o robô voltar.","🏆","boss","60")
+    ]},
+    {icon:"🛞",title:"Unidade 3 · Swerve 2027",desc:"Migração controlada do repositório Liposor/Swerve",lessons:[
+      lesson("swervebase","Base congelada","Parta do commit 0c70bd9 sem copiar dívidas.","❄","concept","20"),
+      lesson("canport","CANPort","Adapte a criação de dispositivos CAN.","🔌","code","25"),
+      lesson("calibration","Geometria e scrub","Meça erros físicos antes de compensar.","📐","quiz","30"),
+      lesson("boss3","Chefão: percurso swerve","Translade, gire e pare em simulação.","🏆","boss","65")
+    ]},
+    {icon:"👁",title:"Unidade 4 · Localização e visão",desc:"Uma verdade para pose, heading e tempo",lessons:[
+      lesson("poseapi","Localization API","Centralize resetPose, resetHeading e visão.","📍","code","35"),
+      lesson("history","Pose histórica","Compare a visão com a pose do mesmo instante.","🕘","concept","30"),
+      lesson("frames","Frame atômico","Pose, tags e latência precisam viajar juntas.","🧬","quiz","30"),
+      lesson("boss4","Chefão: frame atrasado","Rejeite e aceite medições pelo timestamp correto.","🏆","boss","70")
+    ]},
+    {icon:"🟢",title:"Unidade 5 · Intake e Indexer",desc:"Colete, transporte e saiba onde a peça está",lessons:[
+      lesson("intake","Intake por metas","Sem booleano ativo controlando tudo.","⬇","code","25"),
+      lesson("indexer","Indexer simples","Direcione a bola sem virar superestrutura.","➡","concept","20"),
+      lesson("tracker","PieceTracker","EMPTY, INTAKE, INDEXER, MANIPULATOR e JAMMED.","🔎","quiz","30"),
+      lesson("boss5","Chefão: coleta completa","Colete e confirme a entrega da peça.","🏆","boss","60")
+    ]},
+    {icon:"↕",title:"Unidade 6 · Elevador",desc:"Homing, perfis, limites e modo de climb",lessons:[
+      lesson("homing","Homing seguro","Inicialize sem confiar em uma posição falsa.","⌂","concept","25"),
+      lesson("motion","Perfil de movimento","Setpoint, velocidade e feedforward.","〽","code","35"),
+      lesson("envelope","Envelope seguro","Evite colisão entre chassi e manipulador.","🛡","quiz","30"),
+      lesson("boss6","Chefão: alturas seguras","Passe por transferência, tiro e stow.","🏆","boss","65")
+    ]},
+    {icon:"🏈",title:"Unidade 7 · Manipulador e Shooter",desc:"Plantar e lançar uma peça parametrizada",lessons:[
+      lesson("pivot","Pivot angulável","Encoder absoluto e feedforward gravitacional.","📐","code","35"),
+      lesson("shotplanner","ShotPlanner puro","Calcule RPM, ângulo, altura e heading.","🎯","concept","35"),
+      lesson("readiness","Gate de prontidão","Somente alimente quando tudo estiver estável.","🚦","quiz","30"),
+      lesson("boss7","Chefão: place + shoot","Execute as duas funções do manipulador.","🏆","boss","75")
+    ]},
+    {icon:"🧠",title:"Unidade 8 · Superstructure",desc:"A autoridade que faltou ao robô de 2026",lessons:[
+      lesson("goals","Goals do robô","STOW, INTAKE, PLACE, SHOOT, CLIMB e RECOVER.","🗂","concept","30"),
+      lesson("transitions","Transições seguras","Guardas, timeouts e falhas latched.","🚧","code","40"),
+      lesson("priority","Arbitragem","Decida qual solicitação vence sem mágica.","⚖","quiz","30"),
+      lesson("boss8","Chefão: ciclo completo","Coletar → elevar → mirar → atirar → recolher.","🏆","boss","90")
+    ]},
+    {icon:"🗺",title:"Unidade 9 · Auto e PathPlanner",desc:"Inicialização previsível e decisões durante o auto",lessons:[
+      lesson("order","Ordem de inicialização","Drive → Localization → AutoBuilder → Autos.","🔢","quiz","25"),
+      lesson("events","Eventos por goals","NamedCommands pedem metas à Superstructure.","🏷","code","30"),
+      lesson("fallback","Fallback autônomo","Reaja quando a coleta falhar.","↩","concept","30"),
+      lesson("boss9","Chefão: auto adaptativo","Atire se tem peça; saia seguro se não tem.","🏆","boss","75")
+    ]},
+    {icon:"🪝",title:"Unidade 10 · Climb e integração",desc:"Final de partida, segurança e análise de logs",lessons:[
+      lesson("climb","Modo CLIMBING","Reutilize o elevador sem misturar controles.","🪝","code","35"),
+      lesson("faults","Injeção de falhas","Sensor perdido, jam, brownout e frame ruim.","💥","concept","35"),
+      lesson("replay","Replay mental do log","Descubra quem introduziu o erro.","🔁","quiz","30"),
+      lesson("final","Chefão final: partida","Partida completa e checklist de competição.","👑","boss","120")
+    ]}
+  ];
+  function lesson(id,title,desc,icon,type,xp){return{id:id,title:title,desc:desc,icon:icon,type:type,xp:Number(xp)}}
+  var state=JSON.parse(localStorage.getItem("stardust-course-a7")||"null")||{done:[],xp:0,hearts:5,streak:1,last:""};
+  var current=null,step=0,answered=false;
+  var total=units.reduce(function(n,u){return n+u.lessons.length},0);
+
+  var details={
+    a7:{theory:"A Alpha 7 não é compatível com o ambiente de 2026. Para hardware real ela requer Systemcore Image 14, Driver Station Alpha 7 e vendordeps publicados especificamente para a Alpha 7. Em simulação, crie ou importe um projeto 2027 em vez de apenas trocar o número da versão no Gradle.",callout:"Regra da trilha: fixe a versão usada e registre-a no log. Quando sair Alpha 8, primeiro faça uma branch de migração.",question:"Qual é a maneira segura de partir de um projeto 2026?",options:["Trocar 2026 por 2027 no build.gradle","Importar o projeto pelo fluxo da WPILib 2027","Copiar apenas a pasta vendordeps"],answer:1},
+    main:{theory:"Na Alpha 7 a classe principal voltou ao factory loader. Projetos vindos de alphas anteriores precisam fornecer o construtor do Robot, e não apenas a classe.",callout:"A correção oficial é mudar Robot.class para Robot::new ou copiar Main.java de um projeto Alpha 7 novo.",code:"RobotBase.startRobot(Robot::new);",checks:["Robot::new"]},
+    mech:{theory:"No Commands v3, Mechanism agora é uma interface. O mecanismo deve possuir estado e controle local; o RobotContainer apenas cria dependências e bindings.",question:"Quem deve controlar diretamente o motor do elevador?",options:["A Superstructure","ElevatorMechanism/Subsystem","RobotContainer"],answer:1},
+    telemetry:{theory:"SmartDashboard, Sendable e SendableChooser foram substituídos. Telemetry descreve dados de saída, Tunables recebe valores ajustáveis e Selectable representa escolhas. Telemetry pode rotear dados para NetworkTables, DataLog ou um backend de teste.",callout:"Isso resolve um problema estrutural de 2026: o código declara o dado; a configuração superior decide para onde e com qual frequência ele vai.",code:"private final TelemetryTable telemetry = Telemetry.getTable(\"Shooter\");\n\npublic void periodic() {\n  telemetry.log(\"velocityRps\", inputs.velocityRps());\n  telemetry.log(\"ready\", isReady());\n}",checks:["TelemetryTable","Telemetry.getTable","telemetry.log"]},
+    rates:{theory:"Nem todo dado merece 50 Hz. Controle e leitura crítica continuam no loop principal, mas dashboard, temperatura e diagnóstico devem ter frequências próprias.",question:"Qual sinal faz mais sentido publicar a 2 Hz?",options:["Posição usada pelo PID","Temperatura do motor","Estado instantâneo do beam break"],answer:1},
+    snapshots:{theory:"A própria documentação de Telemetry alerta que um TelemetryLoggable produz várias operações, não uma transação atômica. Se os campos precisam representar o mesmo instante, primeiro copie tudo para um record imutável e depois publique.",callout:"A mesma regra vale para Limelight: pose, tagCount, latency e timestamp devem formar uma observação única."},
+    gamepad:{theory:"Os botões de face foram renomeados para faceUp, faceDown, faceLeft e faceRight. Os eixos agora têm deadband padrão, então não aplique uma segunda deadband sem intenção.",question:"Qual nome combina com a Alpha 7?",options:["controller.a()","controller.faceDown()","controller.buttonSouthRaw()"],answer:1},
+    heading:{theory:"O heading hold não deve ser um PID que liga magicamente quando o eixo volta a zero. Modele MANUAL_ROTATION, CAPTURE e HOLD. Ao sair do manual, capture uma única vez o heading atual e zere o estado do controlador.",code:"switch (headingMode) {\n  case MANUAL_ROTATION -> driveManual(omega);\n  case CAPTURE -> captureCurrentHeading();\n  case HOLD -> holdCapturedHeading();\n}",checks:["MANUAL_ROTATION","CAPTURE","HOLD"]},
+    canport:{theory:"Na Alpha 7, classes de dispositivos CAN da WPILib recebem um CANPort enum. Centralize a escolha do barramento e não espalhe strings ou IDs pelos subsistemas.",code:"private static final CANPort RIO_CAN = CANPort.RIO;\n// Crie o dispositivo passando ID e porta CAN compatível.",checks:["CANPort"]},
+    poseapi:{theory:"Gyro, seedFieldCentric, estimator e visão não podem ser quatro autoridades. Todo reset atravessa uma API de localização; nenhum outro subsistema escreve na pose.",code:"public interface Localization {\n  Pose2d getPose();\n  void resetPose(Pose2d pose);\n  void resetHeading(Rotation2d heading);\n  void acceptVisionMeasurement(VisionObservation observation);\n}",checks:["resetPose","resetHeading","acceptVisionMeasurement"]},
+    history:{theory:"Uma imagem capturada em t=10,000 s não pode ser comparada à pose em t=10,060 s. Consulte o histórico do estimador no timestamp de captura. Quanto mais rápido o robô gira, maior o erro de comparar tempos diferentes.",callout:"Timestamps inteiros brutos agora são nanossegundos na Alpha 7; DataLog e NetworkTables ainda usam microssegundos. Mantenha unidades explícitas."},
+    frames:{theory:"Ler tópicos separados pode combinar dados de frames diferentes. Crie VisionObservation imutável contendo pose, timestamp, tagCount, distância, ambiguity e origem.",question:"O filtro de inovação deve comparar a pose visual com qual pose?",options:["A pose atual","A pose no timestamp de captura","A última pose aceita da câmera"],answer:1},
+    intake:{theory:"O Intake deve receber uma meta e controlar apenas seu hardware. Ele não cria RollerSubsystem, não acessa RobotContainer e não decide quando o shooter dispara.",code:"public enum IntakeGoal { STOW, INTAKE, EJECT }\n\npublic void setGoal(IntakeGoal goal) {\n  this.goal = goal;\n}",checks:["enum IntakeGoal","setGoal"]},
+    tracker:{theory:"Sensores não dizem diretamente onde a peça está; eles são evidências. PieceTracker combina entradas com a direção dos motores e o estado anterior.",question:"Dois sensores discordam após um timeout. Qual estado é mais honesto?",options:["MANIPULATOR","EMPTY","UNKNOWN ou JAMMED"],answer:2},
+    motion:{theory:"O elevador recebe posição-alvo; perfil e feedforward geram movimento. A Superstructure não envia tensão diretamente. Simule posição, velocidade, limites e homing.",code:"var setpoint = profile.calculate(dt, current, goal);\nvar volts = pid.calculate(position, setpoint.position)\n    + feedforward.calculate(setpoint.velocity);",checks:["profile.calculate","pid.calculate","feedforward.calculate"]},
+    pivot:{theory:"O manipulador precisa de encoder absoluto, referência relativa coerente e feedforward gravitacional. TRANSFER, STOW, PLACE e SHOOT devem ser posições nomeadas.",code:"double volts = pivotPid.calculate(angleRad, goal.angleRad())\n    + pivotFF.calculate(goal.angleRad(), setpointVelocity);",checks:["pivotPid.calculate","pivotFF.calculate"]},
+    shotplanner:{theory:"ShotPlanner é matemática pura: recebe estado do robô e alvo, devolve ShotSolution. Não conhece TalonFX, controle ou NetworkTables. Isso permite testar interpolação e compensação fora do robô.",callout:"A hipótese de bola de futebol americano fica em GamePieceConstants. Quando a peça oficial sair, o modelo muda; a arquitetura permanece."},
+    readiness:{theory:"Pronto para atirar exige RPM, ângulo, altura, heading, qualidade da pose, peça presente e estabilidade temporal. Não use apenas uma tolerância instantânea.",question:"Quando o feeder pode avançar?",options:["Assim que o shooter recebe setpoint","Quando todos os gates permanecem válidos pelo tempo mínimo","Quando o motorista segura o botão por 1 segundo"],answer:1},
+    transitions:{theory:"Superstructure transforma uma meta em fases seguras. Cada transição possui guarda, timeout e reação de falha. Ela coordena metas dos mecanismos, mas não controla motores.",code:"if (elevator.atTransferHeight() && manipulator.atTransferAngle()) {\n  indexer.setGoal(IndexerGoal.FEED_TO_MANIPULATOR);\n} else if (timer.hasElapsed(TRANSFER_TIMEOUT)) {\n  fault = Fault.TRANSFER_TIMEOUT;\n}",checks:["atTransferHeight","atTransferAngle","TRANSFER_TIMEOUT"]},
+    priority:{theory:"Uma regra simples: segurança vence tudo; climb vence scoring depois de armado; ação manual explícita vence preparação automática; estados normais nunca vencem uma falha latched.",question:"Durante CLIMBING chega uma solicitação de SHOOT. O que acontece?",options:["O shooter liga","A solicitação é rejeitada","O elevador alterna rapidamente"],answer:1},
+    order:{theory:"A ordem evita o erro AutoBuilder not configured: hardware/configuração, drivetrain, localização, AutoBuilder, NamedCommands, autos e por fim bindings.",question:"O que deve existir antes de carregar os autos?",options:["Somente o controle do piloto","AutoBuilder configurado e NamedCommands registrados","O dashboard conectado"],answer:1},
+    events:{theory:"Um evento do PathPlanner não deve ligar vários motores. Ele pede uma meta à Superstructure, que executa a sequência e informa conclusão ou falha.",code:"NamedCommands.registerCommand(\"PrepareShot\",\n  superstructure.requestGoal(SuperstructureGoal.PREPARE_SHOT));",checks:["NamedCommands","requestGoal","PREPARE_SHOT"]},
+    climb:{theory:"Como o climb compartilha o elevador, use modos SCORING e CLIMBING. Só arme o climb em configuração segura, congele metas incompatíveis e exija confirmação da trava.",code:"if (safeToArmClimb()) {\n  elevator.setMode(ElevatorMode.CLIMBING);\n  superstructure.acceptGoal(CLIMB);\n}",checks:["safeToArmClimb","CLIMBING"]},
+    replay:{theory:"Um bom log separa pose odométrica, observação visual, pose fundida, comandos, setpoints e estados. A pergunta deixa de ser 'por que a pose ficou errada?' e vira 'qual fonte introduziu o desvio e em qual instante?'.",question:"Qual conjunto ajuda mais no diagnóstico?",options:["Somente fusedPose","OdometryPose, VisionObservation e FusedPose com timestamps","A posição mostrada no dashboard"],answer:1}
+  };
+
+  var changes=[
+    ["SmartDashboard","Telemetry + TelemetryTable","Saída hierárquica e backend configurável."],
+    ["SendableChooser","Selectable","Escolhas passam pela nova API."],
+    ["Valores ajustáveis misturados","Tunables","Entrada ajustável fica separada da telemetria."],
+    ["Robot.class","Robot::new","Main voltou ao factory loader."],
+    ["Mechanism como classe","Mechanism como interface","Commands v3 teve quebra de API."],
+    ["a/b/x/y","faceDown/Right/Left/Up","Nomes direcionais e deadband padrão."],
+    ["Timestamp inteiro em µs","Timestamp inteiro em ns","DataLog e NT continuam usando µs."],
+    ["Construtor CAN antigo","CANPort enum","Porta CAN passa a ser explícita."],
+    ["AprilTag/CameraServer no núcleo","Vendordeps","Reinstalação das dependências é necessária."],
+    ["GUI anterior","SDL","Sim GUI e desktop usam SDL/gamepad consistente."],
+    ["Alert no WPILib","Alert no wpiutil","Mais funções e joystick warnings como alerts."],
+    ["Projeto 2026 editado à mão","Importação 2027","A importação aplica correções automáticas."]
+  ];
+  var labs=[
+    ["Lab 01 · Loop budget","Simule 10 minutos e registre média, p95, máximo e overruns. Meta: p95 < 15 ms."],
+    ["Lab 02 · Swerve básico","Pose2d, estados dos módulos e trajetória visíveis no AdvantageScope."],
+    ["Lab 03 · Heading Hold","Rotacione manualmente, solte o eixo e prove que o robô não retorna."],
+    ["Lab 04 · Visão atrasada","Injete 60 ms de atraso e compare com o histórico correto."],
+    ["Lab 05 · PieceTracker","Anime a peça: intake → indexer → manipulador → saída."],
+    ["Lab 06 · Mechanism2d","Mostre elevador e pivot respeitando o envelope de colisão."],
+    ["Lab 07 · Shooter","RPM, setpoint, erro, estabilidade e gate de feed no mesmo gráfico."],
+    ["Lab 08 · Superstructure","Exiba goal, fase interna, bloqueio e causa de timeout."],
+    ["Lab 09 · Auto adaptativo","Falhe a coleta e observe a escolha de uma rota segura."],
+    ["Lab 10 · Partida completa","Auto + teleop + place + shoot + climb, com relatório final."]
+  ];
+  var practices=[
+    ["Telemetria excessiva","Escolha frequências adequadas para 8 sinais e encontre o que não pertence ao dashboard."],
+    ["Pose em tempos diferentes","Ordene captura, processamento, recebimento e fusão no tempo correto."],
+    ["Heading Hold brigando","Encontre a transição ausente entre MANUAL_ROTATION, CAPTURE e HOLD."],
+    ["Dependência estática","Refatore um acesso RobotContainer.swerve para injeção de dependência."],
+    ["Frame não atômico","Monte um VisionObservation imutável com todos os campos necessários."],
+    ["Superstructure","Transforme quatro Commands acoplados em uma meta com fases e guards."]
+  ];
+
+  function save(){localStorage.setItem("stardust-course-a7",JSON.stringify(state));renderStats()}
+  function flat(){return units.reduce(function(a,u){return a.concat(u.lessons)},[])}
+  function unlocked(index){return index===0||state.done.indexOf(flat()[index-1].id)>=0}
+  function renderCourse(){
+    var idx=0,out="";
+    units.forEach(function(u){
+      out+='<section class="unit"><div class="unit-head"><div class="unit-icon">'+u.icon+'</div><div><h3>'+u.title+'</h3><p>'+u.desc+'</p></div></div><div class="path">';
+      u.lessons.forEach(function(l){
+        var done=state.done.indexOf(l.id)>=0,open=unlocked(idx),cls=done?"done":open?"open":"locked";
+        if(l.type==="boss")cls+=" boss";
+        out+='<button class="lesson-node '+cls+'" data-id="'+l.id+'" '+(!open?'disabled':'')+'>'+(done?"✓":open?l.icon:"🔒")+'<span class="node-label">'+l.title+' · '+l.xp+' XP</span></button>';
+        idx++;
+      });
+      out+='</div></section>';
+    });
+    document.getElementById("course").innerHTML=out;
+    document.getElementById("lessonCount").textContent=total+" missões";
+    Array.prototype.forEach.call(document.querySelectorAll(".lesson-node:not([disabled])"),function(b){b.onclick=function(){openLesson(b.dataset.id)}});
+  }
+  function renderStats(){
+    var pct=Math.round(state.done.length/total*100);
+    ["xp","mXp"].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=state.xp});
+    ["streak","mStreak"].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=state.streak});
+    document.getElementById("hearts").textContent=state.hearts;
+    document.getElementById("heartTop").textContent="💚 "+state.hearts;
+    document.getElementById("overallBar").style.width=pct+"%";
+    document.getElementById("overallText").textContent=state.done.length+" de "+total+" concluídas";
+    document.getElementById("overallPct").textContent=pct+"%";
+  }
+  function findLesson(id){var f=null;units.forEach(function(u){u.lessons.forEach(function(l){if(l.id===id)f=l})});return f}
+  function nextUndone(){var all=flat();for(var i=0;i<all.length;i++)if(state.done.indexOf(all[i].id)<0&&unlocked(i))return all[i];return all[all.length-1]}
+  function openLesson(id){current=findLesson(id);step=0;answered=false;document.getElementById("lessonModal").classList.add("show");document.getElementById("lessonModal").setAttribute("aria-hidden","false");renderStep()}
+  function genericDetail(){
+    return {theory:current.desc+" Nesta missão você deve implementar a menor solução possível, registrar entradas, setpoints, saídas e estado, e provar o comportamento em simulação.",callout:"Critério de conclusão: código testável, sem acesso estático ao RobotContainer e sem telemetria sem orçamento."}
+  }
+  function renderStep(){
+    var d=details[current.id]||genericDetail(),body="",btn=document.getElementById("nextStep");
+    document.getElementById("stepBar").style.width=((step+1)/4*100)+"%";
+    document.getElementById("prevStep").style.visibility=step?"visible":"hidden";
+    if(step===0){
+      body='<span class="eyebrow">'+current.xp+' XP · '+(current.type==="boss"?"Chefão":"Missão")+'</span><h2>'+current.icon+' '+current.title+'</h2><p>'+d.theory+'</p>'+(d.callout?'<div class="callout">'+d.callout+'</div>':'')+'<span class="badge">WPILib 2027 Alpha 7</span>';btn.textContent="Continuar";
+    }else if(step===1){
+      body='<span class="eyebrow">Aplicação</span><h2>Leve para o robô 2027</h2><p>'+d.theory+'</p><pre>'+(d.code||"// Escreva a arquitetura ou pseudocódigo desta missão.\n// Entradas → estado → decisão → saída → telemetria")+'</pre><div class="callout">Sempre registre o estado desejado e o estado observado separadamente.</div>';btn.textContent="Praticar";
+    }else if(step===2){
+      if(d.question){
+        body='<span class="eyebrow">Desafio rápido</span><h2>'+d.question+'</h2><div class="options">'+d.options.map(function(o,i){return '<button class="option" data-opt="'+i+'">'+o+'</button>'}).join("")+'</div><div id="feedback" class="feedback"></div>';
+      }else{
+        body='<span class="eyebrow">Desafio de código</span><h2>Complete a ideia principal</h2><p>Edite o trecho. A validação procura os conceitos essenciais; no projeto real, compile e teste na simulação.</p><textarea id="codeInput">'+(d.code||"// Descreva a solução usando goals, sensores e critérios de conclusão.\n")+'</textarea><div id="feedback" class="feedback"></div>';
+      }
+      btn.textContent="Verificar";answered=false;
+      setTimeout(function(){Array.prototype.forEach.call(document.querySelectorAll(".option"),function(o){o.onclick=function(){Array.prototype.forEach.call(document.querySelectorAll(".option"),function(x){x.classList.remove("selected")});o.classList.add("selected")}})},0);
+    }else{
+      body='<span class="eyebrow">Missão concluída</span><h2>Excelente trabalho! ✦</h2><p>Você ganhou <b style="color:var(--yellow)">'+current.xp+' XP</b>. Agora registre o que aprendeu no código e execute o checkpoint no simulador.</p><div class="callout"><b>Definition of Done:</b> comportamento determinístico, sinais organizados, teste repetível e nenhuma autoridade duplicada.</div>';btn.textContent="Concluir";
+    }
+    document.getElementById("lessonBody").innerHTML=body;
+  }
+  function verify(){
+    var d=details[current.id]||genericDetail(),fb=document.getElementById("feedback"),ok=false;
+    if(d.question){
+      var sel=document.querySelector(".option.selected");
+      if(!sel){fb.className="feedback bad";fb.textContent="Escolha uma resposta antes de verificar.";return}
+      ok=Number(sel.dataset.opt)===d.answer;
+    }else{
+      var value=(document.getElementById("codeInput")||{}).value||"";
+      var checks=d.checks||["goal","state"];
+      ok=checks.every(function(k){return value.toLowerCase().indexOf(k.toLowerCase())>=0});
+    }
+    answered=ok;
+    if(ok){fb.className="feedback good";fb.textContent="Correto. A arquitetura preserva uma responsabilidade clara.";document.getElementById("nextStep").textContent="Continuar"}
+    else{state.hearts=Math.max(0,state.hearts-1);save();fb.className="feedback bad";fb.textContent="Ainda não. Revise a separação de responsabilidades e tente novamente."}
+  }
+  document.getElementById("nextStep").onclick=function(){
+    if(step===2&&!answered){verify();return}
+    if(step<3){step++;renderStep();return}
+    if(state.done.indexOf(current.id)<0){state.done.push(current.id);state.xp+=current.xp;state.hearts=Math.min(5,state.hearts+1);state.last=new Date().toISOString().slice(0,10);save()}
+    document.getElementById("lessonModal").classList.remove("show");renderCourse();renderStats();
+  };
+  document.getElementById("prevStep").onclick=function(){if(step>0){step--;renderStep()}};
+  document.getElementById("closeLesson").onclick=function(){document.getElementById("lessonModal").classList.remove("show")};
+  document.getElementById("lessonModal").onclick=function(e){if(e.target===this)this.classList.remove("show")};
+  function go(name){
+    Array.prototype.forEach.call(document.querySelectorAll(".screen"),function(s){s.classList.toggle("active",s.id===name)});
+    Array.prototype.forEach.call(document.querySelectorAll(".nav button"),function(b){b.classList.toggle("active",b.dataset.screen===name)});
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-screen]"),function(b){b.onclick=function(){go(b.dataset.screen)}});
+  Array.prototype.forEach.call(document.querySelectorAll("[data-go]"),function(b){b.onclick=function(){go(b.dataset.go)}});
+  document.getElementById("continueBtn").onclick=function(){openLesson(nextUndone().id)};
+  document.getElementById("dailyBtn").onclick=function(){openLesson(nextUndone().id)};
+  document.getElementById("resetBtn").onclick=function(){if(confirm("Apagar todo o progresso local?")){state={done:[],xp:0,hearts:5,streak:1,last:""};save();renderCourse()}};
+  document.getElementById("changeGrid").innerHTML=changes.map(function(c){return '<div class="change"><b><span class="old">'+c[0]+'</span> → <span class="new">'+c[1]+'</span></b><span style="color:var(--muted);font-size:13px">'+c[2]+'</span></div>'}).join("");
+  document.getElementById("labGrid").innerHTML=labs.map(function(l){return '<div class="lab"><b>'+l[0]+'</b><span style="color:var(--muted);font-size:13px;line-height:1.45">'+l[1]+'</span></div>'}).join("");
+  document.getElementById("practiceGrid").innerHTML=practices.map(function(p,i){return '<div class="lab"><b>'+p[0]+'</b><p>'+p[1]+'</p><button class="outline-btn practice" data-i="'+i+'">Treinar · 15 XP</button></div>'}).join("");
+  Array.prototype.forEach.call(document.querySelectorAll(".practice"),function(b){b.onclick=function(){if(!b.disabled){state.xp+=15;b.disabled=true;b.textContent="Concluído ✓";save()}}});
+  renderCourse();renderStats();
+})();
+</script>
+</body>
+</html>
